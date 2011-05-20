@@ -42,6 +42,8 @@ public class Turn {
 				this.curPhase = this.Phases.get(curIndex);
 			} else {
 				this.isDone = true;
+				Game temp = Game.GetInstance();
+				temp.newTurn();
 			}
 		}
 	}

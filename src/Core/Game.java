@@ -223,6 +223,11 @@ public class Game {
 		this.in.readFromConsole();
 	}
 
+	public void newTurn()
+	{
+		this.curTurn = new Turn(this.getPlayer(0));
+	}
+	
 	public void resolveOne()
 	{
 		this.STK.resolveOne();

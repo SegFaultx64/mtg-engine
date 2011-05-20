@@ -24,8 +24,10 @@ public class Turn {
 		this.Phases.add(tempPhase);
 		tempPhase = new MainPhase(this);
 		this.Phases.add(tempPhase);
+		tempPhase = new EndPhase(this);
+		this.Phases.add(tempPhase);
 		curPhase = this.Phases.get(0);
-		this.numPhase = 1;
+		this.numPhase = 2;
 	}
 	
 	public void advance()

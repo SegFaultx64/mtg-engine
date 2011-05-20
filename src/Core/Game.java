@@ -230,10 +230,4 @@ public class Game {
 			out.write("Colorless Floating: " + P.MP.getColorless());
 		}
 	}
-
-	/*
-	 * public void playLand(Player P) { Card temp = new Card(null, "Land" ,"" ,
-	 * ""); int x = P.HD.Contents.indexOf(temp); P.HD.Contents.remove(x); }
-	 */
-
 }

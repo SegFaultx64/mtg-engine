@@ -1,4 +1,5 @@
 package Core;
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -12,41 +13,38 @@ import Cards.Permanent;
 import Characteristics.Color;
 import Characteristics.Manacost;
 
-
 public class Game {
 	private static Game instance = null;
-	
-	public static Game GetInstance()
-	{
-		if(instance == null) {
-			instance = new Game();
-		}
-		return instance;
-	}
-	public static String ParseCMC(String ManaCost)
-	{
-		//Parse a string containing a manacost using regex 
-		//Return a string containing the Converted Mana Cost
-		return null;
-	}
-	public static Color ParseColor(Card C)
-	{
-		// Takes a card and uses it's rules text and mana cost to determine it's color.
-		return null;
-	}
 	Battlefield BF = new Battlefield();
 	Turn curTurn;
 	CoreInput in;
 	boolean isDone = false;
 	ArrayList<Card> KnownCards = new ArrayList<Card>();
-	
 	CoreOutput out;
 	ArrayList<Player> Players = new ArrayList<Player>();
-
 	Stack STK = new Stack();
+	
+	
+	public static Game GetInstance() {
+		if (instance == null) {
+			instance = new Game();
+		}
+		return instance;
+	}
 
-	protected Game()
-	{
+	public static String ParseCMC(String ManaCost) {
+		// Parse a string containing a manacost using regex
+		// Return a string containing the Converted Mana Cost
+		return null;
+	}
+
+	public static Color ParseColor(Card C) {
+		// Takes a card and uses it's rules text and mana cost to determine it's
+		// color.
+		return null;
+	}
+
+	protected Game() {
 		this.createTestCards();
 		this.Players.add(new Player("Max"));
 		this.in = new CoreInput(this, this.getPlayer(0));
@@ -57,14 +55,12 @@ public class Game {
 			e.printStackTrace();
 		}
 	}
-	
-	private void begin()
-	{
+
+	private void begin() {
 		curTurn = new Turn(this.getPlayer(0));
 	}
 
-	private void createTestCards()
-	{
+	private void createTestCards() {
 		Card Test1, Test2, Test3;
 		Test1 = new Card(new Manacost("1"), "Lion", "", "Creature");
 		Test2 = new Card(new Manacost("2"), "Bear", "", "Creature");
@@ -74,67 +70,56 @@ public class Game {
 		this.KnownCards.add(Test3);
 	}
 
-	public void emptyAllManaPools()
-	{
+	public void emptyAllManaPools() {
 		this.Players.get(0).MP.empty();
 	}
 
-	public void end()
-	{
+	public void end() {
 		this.isDone = true;
 	}
 
-	public boolean execStack()
-	{
+	public boolean execStack() {
 		return false;
 	}
-	
-	public Card findCard(Player P, Zone Z, String Name)
-	{
-		Card temp = new Card(null, Name ,"", "");
+
+	public Card findCard(Player P, Zone Z, String Name) {
+		Card temp = new Card(null, Name, "", "");
 		return (Z.getCard((Z.findCardIndex(temp))));
 	}
-	
-	public ArrayList<Permanent> getPermanentsControlledBy(Player P)
-	{
+
+	public ArrayList<Permanent> getPermanentsControlledBy(Player P) {
 		ArrayList<Permanent> toReturn = new ArrayList<Permanent>();
 		Iterator<Permanent> itPerm = this.BF.getContentsIterator();
 		Permanent tempPerm;
-		while (itPerm.hasNext())
-		{
+		while (itPerm.hasNext()) {
 			tempPerm = itPerm.next();
-			if (tempPerm.getController().equals(P))
-			{
+			if (tempPerm.getController().equals(P)) {
 				toReturn.add(tempPerm);
 			}
 		}
 		return toReturn;
 	}
-	
-	public Player getPlayer(int x)
-	{
+
+	public Player getPlayer(int x) {
 		return this.Players.get(x);
 	}
-	
-	public void moveTo(Card C, Zone Z)
-	{
+
+	public void moveTo(Card C, Zone Z) {
 		Zone curZone = C.getZone();
 		int curIndex = curZone.findCardIndex(C);
 		Z.addCard(C);
 		curZone.removeCard(curIndex);
 		C.MoveTo(Z);
 	}
-	
-	public void moveTo(int cardIndex, Zone curZone, Zone Z)
-	{
+
+	public void moveTo(int cardIndex, Zone curZone, Zone Z) {
 		Card tempCard = curZone.getCard(cardIndex);
 		Z.addCard(tempCard);
 		curZone.removeCard(cardIndex);
 		tempCard.MoveTo(Z);
 	}
-	
-	public Permanent moveToBattlefield(Card C)
-	{
+
+	public Permanent moveToBattlefield(Card C) {
 		Permanent tempPerm = C.getPermanent();
 		Zone curZone = C.getZone();
 		int curIndex = curZone.findCardIndex(C);
@@ -143,15 +128,12 @@ public class Game {
 		tempPerm.MoveTo(this.BF);
 		return tempPerm;
 	}
-	
-	public void passPriority(Player P)
-	{
-		if (this.STK.isEmpty())
-		{
+
+	public void passPriority(Player P) {
+		if (this.STK.isEmpty()) {
 			this.curTurn.advance();
 			this.out.write("" + curTurn);
-			if (this.curTurn.isDone())
-			{
+			if (this.curTurn.isDone()) {
 				this.curTurn = new Turn(P);
 			}
 		} else {
@@ -159,31 +141,28 @@ public class Game {
 		}
 	}
 
-	public void play(String C, Player P)
-	{
+	public void play(String C, Player P) {
 		Card temp = new Card(null, C, "", "");
 		int x = P.HD.findCardIndex(temp);
-		if (x != -1)
-		{
+		if (x != -1) {
 			temp = P.HD.getCard(x);
-			if (temp.isLand())
-			{
-				if (P.canPlayLands > 0 && this.STK.isEmpty() && this.curTurn.isMainPhase())
-				{
+			if (temp.isLand()) {
+				if (P.canPlayLands > 0 && this.STK.isEmpty()
+						&& this.curTurn.isMainPhase()) {
 					temp = this.moveToBattlefield(temp);
 					((Permanent) temp).setController(P);
-					P.canPlayLands =- 1;
+					P.canPlayLands = -1;
 					out.write("" + this.BF);
 				} else {
-					out.write("Error: That player can't play any more lands this turn. " + P.canPlayLands);
+					out.write("Error: That player can't play any more lands this turn. "
+							+ P.canPlayLands);
 				}
 			} else {
 				// It is a spell
-				//check is that spell can be played (enough mana in mana pool, legal target, etc)
-				if (this.STK.isEmpty() || temp.hasFlash())
-				{
-					if (temp.canPlay())
-					{
+				// check is that spell can be played (enough mana in mana pool,
+				// legal target, etc)
+				if (this.STK.isEmpty() || temp.hasFlash()) {
+					if (temp.canPlay()) {
 						P.MP.removeMana(temp.getManaCost());
 						temp.MoveTo(STK);
 						temp = temp.getSpell();
@@ -197,82 +176,64 @@ public class Game {
 					out.write("Error: The stack is not empty and that card cannot be played as an instant.");
 				}
 			}
-		} else
-		{
+		} else {
 			out.write("Error: No card of that name found in that player's hand.");
 		}
 	}
-	
-	public void printBattlefield()
-	{
+
+	public void printBattlefield() {
 		out.write("" + this.BF);
 	}
-	
-	public void printHand(Player P)
-	{
+
+	public void printHand(Player P) {
 		out.write("" + P.HD);
 	}
-	
-	public void printStack()
-	{
+
+	public void printStack() {
 		out.write("" + this.STK);
 	}
-	
-	public void readLine() throws IOException
-	{
+
+	public void readLine() throws IOException {
 		this.in.readFromConsole();
 	}
 
-	public void newTurn()
-	{
+	public void newTurn() {
 		this.curTurn = new Turn(this.getPlayer(0));
 	}
-	
-	public void resolveOne()
-	{
+
+	public void resolveOne() {
 		this.STK.resolveOne();
 		out.write("" + this.BF);
 	}
-	
-	public int run()
-	{
+
+	public int run() {
 		if (this.curTurn == null)
 			curTurn = new Turn(this.getPlayer(0));
-		if (!(this.isDone))
-		{
+		if (!(this.isDone)) {
 			try {
 				in.readFromConsole();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			this.run();
 		}
 		return 0;
 	}
-	
-	public void tapForMana(String C, Player P)
-	{
+
+	public void tapForMana(String C, Player P) {
 		Card temp = new Card(null, C, "", "");
 		int x = this.BF.findUntappedPermanentIndex(temp);
-		if (x != -1)
-		{
+		if (x != -1) {
 			temp = this.BF.getCard(x);
 			((Permanent) temp).tap();
 			P.MP.addColorless();
 			out.write("Colorless Floating: " + P.MP.getColorless());
 		}
 	}
-	
-	
-	/*
-	public void playLand(Player P)
-	{
-		Card temp = new Card(null, "Land" ,"" , "");
-		int x = P.HD.Contents.indexOf(temp);
-		P.HD.Contents.remove(x);
-	}
-	*/
 
+	/*
+	 * public void playLand(Player P) { Card temp = new Card(null, "Land" ,"" ,
+	 * ""); int x = P.HD.Contents.indexOf(temp); P.HD.Contents.remove(x); }
+	 */
 
 }

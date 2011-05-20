@@ -14,16 +14,15 @@ import Characteristics.Manacost;
 
 
 public class Game {
-	CoreInput in;
-	CoreOutput out;
-	ArrayList<Player> Players = new ArrayList<Player>();
 	private static Game instance = null;
-	ArrayList<Card> KnownCards = new ArrayList<Card>();
-	Battlefield BF = new Battlefield();
-	Stack STK = new Stack();
-	Turn curTurn;
-	boolean isDone = false;
 	
+	public static Game GetInstance()
+	{
+		if(instance == null) {
+			instance = new Game();
+		}
+		return instance;
+	}
 	public static String ParseCMC(String ManaCost)
 	{
 		//Parse a string containing a manacost using regex 
@@ -35,6 +34,16 @@ public class Game {
 		// Takes a card and uses it's rules text and mana cost to determine it's color.
 		return null;
 	}
+	Battlefield BF = new Battlefield();
+	Turn curTurn;
+	CoreInput in;
+	boolean isDone = false;
+	ArrayList<Card> KnownCards = new ArrayList<Card>();
+	
+	CoreOutput out;
+	ArrayList<Player> Players = new ArrayList<Player>();
+
+	Stack STK = new Stack();
 
 	protected Game()
 	{
@@ -48,18 +57,10 @@ public class Game {
 			e.printStackTrace();
 		}
 	}
-
+	
 	private void begin()
 	{
 		curTurn = new Turn(this.getPlayer(0));
-	}
-	
-	public static Game GetInstance()
-	{
-		if(instance == null) {
-			instance = new Game();
-		}
-		return instance;
 	}
 
 	private void createTestCards()
@@ -73,15 +74,89 @@ public class Game {
 		this.KnownCards.add(Test3);
 	}
 
-	public Player getPlayer(int x)
+	public void emptyAllManaPools()
 	{
-		return this.Players.get(x);
+		this.Players.get(0).MP.empty();
 	}
 
+	public void end()
+	{
+		this.isDone = true;
+	}
+
+	public boolean execStack()
+	{
+		return false;
+	}
+	
 	public Card findCard(Player P, Zone Z, String Name)
 	{
 		Card temp = new Card(null, Name ,"", "");
 		return (Z.getCard((Z.findCardIndex(temp))));
+	}
+	
+	public ArrayList<Permanent> getPermanentsControlledBy(Player P)
+	{
+		ArrayList<Permanent> toReturn = new ArrayList<Permanent>();
+		Iterator<Permanent> itPerm = this.BF.getContentsIterator();
+		Permanent tempPerm;
+		while (itPerm.hasNext())
+		{
+			tempPerm = itPerm.next();
+			if (tempPerm.getController().equals(P))
+			{
+				toReturn.add(tempPerm);
+			}
+		}
+		return toReturn;
+	}
+	
+	public Player getPlayer(int x)
+	{
+		return this.Players.get(x);
+	}
+	
+	public void moveTo(Card C, Zone Z)
+	{
+		Zone curZone = C.getZone();
+		int curIndex = curZone.findCardIndex(C);
+		Z.addCard(C);
+		curZone.removeCard(curIndex);
+		C.MoveTo(Z);
+	}
+	
+	public void moveTo(int cardIndex, Zone curZone, Zone Z)
+	{
+		Card tempCard = curZone.getCard(cardIndex);
+		Z.addCard(tempCard);
+		curZone.removeCard(cardIndex);
+		tempCard.MoveTo(Z);
+	}
+	
+	public Permanent moveToBattlefield(Card C)
+	{
+		Permanent tempPerm = C.getPermanent();
+		Zone curZone = C.getZone();
+		int curIndex = curZone.findCardIndex(C);
+		this.BF.addCard(tempPerm);
+		curZone.removeCard(curIndex);
+		tempPerm.MoveTo(this.BF);
+		return tempPerm;
+	}
+	
+	public void passPriority(Player P)
+	{
+		if (this.STK.isEmpty())
+		{
+			this.curTurn.advance();
+			this.out.write("" + curTurn);
+			if (this.curTurn.isDone())
+			{
+				this.curTurn = new Turn(P);
+			}
+		} else {
+			this.resolveOne();
+		}
 	}
 
 	public void play(String C, Player P)
@@ -128,51 +203,14 @@ public class Game {
 		}
 	}
 	
-	public void tapForMana(String C, Player P)
+	public void printBattlefield()
 	{
-		Card temp = new Card(null, C, "", "");
-		int x = this.BF.findUntappedPermanentIndex(temp);
-		if (x != -1)
-		{
-			temp = this.BF.getCard(x);
-			((Permanent) temp).tap();
-			P.MP.addColorless();
-			out.write("Colorless Floating: " + P.MP.getColorless());
-		}
-	}
-	
-	public void resolveOne()
-	{
-		this.STK.resolveOne();
 		out.write("" + this.BF);
 	}
 	
-	public void moveTo(Card C, Zone Z)
+	public void printHand(Player P)
 	{
-		Zone curZone = C.getZone();
-		int curIndex = curZone.findCardIndex(C);
-		Z.addCard(C);
-		curZone.removeCard(curIndex);
-		C.MoveTo(Z);
-	}
-	
-	public void moveTo(int cardIndex, Zone curZone, Zone Z)
-	{
-		Card tempCard = curZone.getCard(cardIndex);
-		Z.addCard(tempCard);
-		curZone.removeCard(cardIndex);
-		tempCard.MoveTo(Z);
-	}
-	
-	public Permanent moveToBattlefield(Card C)
-	{
-		Permanent tempPerm = C.getPermanent();
-		Zone curZone = C.getZone();
-		int curIndex = curZone.findCardIndex(C);
-		this.BF.addCard(tempPerm);
-		curZone.removeCard(curIndex);
-		tempPerm.MoveTo(this.BF);
-		return tempPerm;
+		out.write("" + P.HD);
 	}
 	
 	public void printStack()
@@ -180,50 +218,15 @@ public class Game {
 		out.write("" + this.STK);
 	}
 	
-	public void printHand(Player P)
+	public void readLine() throws IOException
 	{
-		out.write("" + P.HD);
+		this.in.readFromConsole();
 	}
 
-	public void printBattlefield()
+	public void resolveOne()
 	{
+		this.STK.resolveOne();
 		out.write("" + this.BF);
-	}
-	
-	public ArrayList<Permanent> getPermanentsControlledBy(Player P)
-	{
-		ArrayList<Permanent> toReturn = new ArrayList<Permanent>();
-		Iterator<Permanent> itPerm = this.BF.getContentsIterator();
-		Permanent tempPerm;
-		while (itPerm.hasNext())
-		{
-			tempPerm = itPerm.next();
-			if (tempPerm.getController().equals(P))
-			{
-				toReturn.add(tempPerm);
-			}
-		}
-		return toReturn;
-	}
-	
-	public boolean execStack()
-	{
-		return false;
-	}
-	
-	public void passPriority(Player P)
-	{
-		if (this.STK.isEmpty())
-		{
-			this.curTurn.advance();
-			this.out.write("" + curTurn);
-			if (this.curTurn.isDone())
-			{
-				this.curTurn = new Turn(P);
-			}
-		} else {
-			this.resolveOne();
-		}
 	}
 	
 	public int run()
@@ -242,20 +245,18 @@ public class Game {
 		}
 		return 0;
 	}
-
-	public void readLine() throws IOException
-	{
-		this.in.readFromConsole();
-	}
 	
-	public void emptyAllManaPools()
+	public void tapForMana(String C, Player P)
 	{
-		this.Players.get(0).MP.empty();
-	}
-	
-	public void end()
-	{
-		this.isDone = true;
+		Card temp = new Card(null, C, "", "");
+		int x = this.BF.findUntappedPermanentIndex(temp);
+		if (x != -1)
+		{
+			temp = this.BF.getCard(x);
+			((Permanent) temp).tap();
+			P.MP.addColorless();
+			out.write("Colorless Floating: " + P.MP.getColorless());
+		}
 	}
 	
 	

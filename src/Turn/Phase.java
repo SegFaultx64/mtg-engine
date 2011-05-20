@@ -42,6 +42,7 @@ public class Phase {
 			this.execStep();
 		} else {
 			this.isDone = true;
+			this.Parent.advance();
 		}
 	}
 	

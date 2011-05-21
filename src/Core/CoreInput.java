@@ -1,6 +1,8 @@
 package Core;
 
 import java.io.*;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -8,6 +10,11 @@ public class CoreInput {
 	BufferedReader brIn;
 	Game curGame;
 	Player curPlayer;
+	int intPort;
+	boolean useNetwork = false;
+	ServerSocket listener = null;
+	Socket connection;
+	DataOutputStream clientOut;
 	
 	public CoreInput (Game G, Player P)
 	{
@@ -16,11 +23,93 @@ public class CoreInput {
 		this.curPlayer = P;
 	}
 	
-	public void readFromConsole() throws IOException
+	public void readFromConsole()
 	{
-		String curCommand;
-		curCommand = brIn.readLine();
+		String curCommand = "";
+		try {
+			curCommand = brIn.readLine();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		this.evalCommand(curCommand);
+	}
+	
+	public void readFromNetwork()
+	{
+		// set up our readers/writers
+		BufferedReader clientIn = null;
+		try {
+			clientIn = new BufferedReader(
+					new InputStreamReader(connection.getInputStream()));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		try {
+			clientOut = new DataOutputStream(
+					connection.getOutputStream());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		// read a line from the client
+		String clientDataIn = null;
+		try {
+			clientDataIn = clientIn.readLine();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		System.out.println("< Received: " + clientDataIn);
+		this.evalCommand(clientDataIn);
+	}
+	
+	public void useNetwork(int port)
+	{
+		this.intPort = port;
+		useNetwork = true;
+		//try to create listener, if it fails halt execution and display error
+		try {
+			listener = new ServerSocket(intPort);
+		} catch (Exception e)
+		{
+			System.out.print("! ERROR: Could not listen on port: ");
+			System.out.println(intPort);
+			System.exit(1);
+		}
+		System.out.println("! Listening on port: " + listener.getLocalPort());
+		try {
+			connection = listener.accept();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		System.out.println("! Accepted connection from: " + 
+				connection.getRemoteSocketAddress());
+	}
+	
+	public void writeToNetwork(String S)
+	{
+		try {
+			this.clientOut.writeChars(S);
+			clientOut.writeBytes("\n");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	
+	public void readIn()
+	{
+		if (!(useNetwork))
+		{
+			readFromConsole();
+		} else {
+			readFromNetwork();
+		}
 	}
 	
 	private void evalCommand(String S)

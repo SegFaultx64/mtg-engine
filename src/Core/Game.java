@@ -22,6 +22,7 @@ public class Game {
 	Turn curTurn;
 	CoreInput in;
 	CoreOutput out;
+	CoreIO io;
 	boolean isDone = false;
 	ArrayList<Card> KnownCards = new ArrayList<Card>();
 	ArrayList<Player> Players = new ArrayList<Player>();
@@ -48,20 +49,14 @@ public class Game {
 		return null;
 	}
 
-	protected Game() {
-		try {
-			this.out = new CoreOutput(this);
-		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
+	protected Game() {}
 
 	public void begin() {
 		this.createTestCards();
 		this.Players.add(new Player("Max"));
 		curTurn = new Turn(this.getPlayer(0));
-		this.in = new CoreInput(this, this.getPlayer(0));
+		this.io = new CoreIO(this.getPlayer(0));
+		this.io.in.useNetwork(9001);
 	}
 
 	private void createTestCards() {
@@ -142,7 +137,7 @@ public class Game {
 	public void passPriority(Player P) {
 		if (this.STK.isEmpty()) {
 			this.curTurn.advance();
-			this.out.write("" + curTurn);
+			this.io.writeOut("" + curTurn);
 			if (this.curTurn.isDone()) {
 				this.curTurn = new Turn(P);
 			}
@@ -186,9 +181,9 @@ public class Game {
 					temp = this.moveToBattlefield(temp);
 					((Permanent) temp).setController(P);
 					P.canPlayLands = -1;
-					out.write("" + this.BF);
+					io.writeOut("" + this.BF);
 				} else {
-					out.write("Error: That player can't play any more lands this turn. "
+					io.writeOut("Error: That player can't play any more lands this turn. "
 							+ P.canPlayLands);
 				}
 			} else {
@@ -202,33 +197,33 @@ public class Game {
 						temp = temp.getSpell();
 						this.STK.addSpell(temp);
 						P.HD.removeCard(x);
-						out.write("" + this.STK);
+						io.writeOut("" + this.STK);
 					} else {
-						out.write("Error: Either insufficient mana or no legal targets.");
+						io.writeOut("Error: Either insufficient mana or no legal targets.");
 					}
 				} else {
-					out.write("Error: The stack is not empty and that card cannot be played as an instant.");
+					io.writeOut("Error: The stack is not empty and that card cannot be played as an instant.");
 				}
 			}
 		} else {
-			out.write("Error: No card of that name found in that player's hand.");
+			io.writeOut("Error: No card of that name found in that player's hand.");
 		}
 	}
 
 	public void printBattlefield() {
-		out.write("" + this.BF);
+		io.writeOut("" + this.BF);
 	}
 
 	public void printHand(Player P) {
-		out.write("" + P.HD);
+		io.writeOut("" + P.HD);
 	}
 
 	public void printStack() {
-		out.write("" + this.STK);
+		io.writeOut("" + this.STK);
 	}
 
 	public void readLine() throws IOException {
-		this.in.readFromConsole();
+		this.io.readIn();
 	}
 
 	public void newTurn() {
@@ -237,18 +232,14 @@ public class Game {
 
 	public void resolveOne() {
 		this.STK.resolveOne();
-		out.write("" + this.BF);
+		io.writeOut("" + this.BF);
 	}
 
 	public int run() {
 		if (this.curTurn == null)
 			curTurn = new Turn(this.getPlayer(0));
 		if (!(this.isDone)) {
-			try {
-				in.readFromConsole();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			io.readIn();
 			this.run();
 		}
 		return 0;
@@ -261,7 +252,7 @@ public class Game {
 			temp = this.BF.getCard(x);
 			((Permanent) temp).tap();
 			P.MP.addColorless();
-			out.write("Colorless Floating: " + P.MP.getColorless());
+			io.writeOut("Colorless Floating: " + P.MP.getColorless());
 		}
 	}
 }

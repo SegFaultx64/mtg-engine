@@ -12,6 +12,7 @@ public class TestCases {
 	public static void main (String[] args) throws IOException
 	{
 		Game temp = Game.GetInstance();
+		temp.begin();
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		Player tempPlayer = temp.getPlayer(0);
 		tempPlayer.loadDeck();

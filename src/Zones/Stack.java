@@ -10,9 +10,10 @@ public class Stack extends Zone{
 		this.Contents.add(S);
 	}
 	
-	public void addAbility()
+	public void addAbility(EventPlaceholder E)
 	{
 		//unimplemented
+		this.Contents.add(E);
 	}
 	
 	public void resolveOne()
@@ -20,8 +21,11 @@ public class Stack extends Zone{
 		Game curGame = Game.GetInstance();
 		int size = this.Contents.size();
 		Spell toResolve = (Spell) this.Contents.get(size - 1);
-		if (toResolve.isPermanent())
+		if (toResolve.isAbility())
 		{
+			((EventPlaceholder) toResolve).getEvent().exec();
+			this.Contents.remove(0);
+		} else if (toResolve.isPermanent()){
 			curGame.moveToBattlefield(toResolve);
 		}
 	}

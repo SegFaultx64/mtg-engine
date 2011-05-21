@@ -4,24 +4,28 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Queue;
 
 import Turn.Turn;
 import Zones.*;
 
 import Cards.Card;
+import Cards.EventPlaceholder;
 import Cards.Permanent;
 import Characteristics.Color;
 import Characteristics.Manacost;
+import Events.*;
 
 public class Game {
 	private static Game instance = null;
 	Battlefield BF = new Battlefield();
 	Turn curTurn;
 	CoreInput in;
+	CoreOutput out;
 	boolean isDone = false;
 	ArrayList<Card> KnownCards = new ArrayList<Card>();
-	CoreOutput out;
 	ArrayList<Player> Players = new ArrayList<Player>();
+	ArrayList<Trigger> knownTriggers = new ArrayList<Trigger>();
 	Stack STK = new Stack();
 	
 	
@@ -45,9 +49,6 @@ public class Game {
 	}
 
 	protected Game() {
-		this.createTestCards();
-		this.Players.add(new Player("Max"));
-		this.in = new CoreInput(this, this.getPlayer(0));
 		try {
 			this.out = new CoreOutput(this);
 		} catch (UnsupportedEncodingException e) {
@@ -56,13 +57,19 @@ public class Game {
 		}
 	}
 
-	private void begin() {
+	public void begin() {
+		this.createTestCards();
+		this.Players.add(new Player("Max"));
 		curTurn = new Turn(this.getPlayer(0));
+		this.in = new CoreInput(this, this.getPlayer(0));
 	}
 
 	private void createTestCards() {
 		Card Test1, Test2, Test3;
-		Test1 = new Card(new Manacost("1"), "Lion", "", "Creature");
+		Event tempEvent = new eventDrawCards(null, 1);
+		Trigger tempTrigger = new triggerCiTP(null, tempEvent);
+		Test1 = new Card(new Manacost("2"), "WallofOmens", "", "Creature");
+		Test1.addTriggeredAbility(tempTrigger, tempEvent);
 		Test2 = new Card(new Manacost("2"), "Bear", "", "Creature");
 		Test3 = new Card(null, "Land", "", "Land");
 		this.KnownCards.add(Test1);
@@ -93,7 +100,7 @@ public class Game {
 		Permanent tempPerm;
 		while (itPerm.hasNext()) {
 			tempPerm = itPerm.next();
-			if (tempPerm.getController().equals(P)) {
+			if (tempPerm != null && tempPerm.getController().equals(P)) {
 				toReturn.add(tempPerm);
 			}
 		}
@@ -123,9 +130,12 @@ public class Game {
 		Permanent tempPerm = C.getPermanent();
 		Zone curZone = C.getZone();
 		int curIndex = curZone.findCardIndex(C);
+		((Permanent) tempPerm).setController(C.getOwner());
 		this.BF.addCard(tempPerm);
 		curZone.removeCard(curIndex);
 		tempPerm.MoveTo(this.BF);
+		Trigger tempTrigger = new triggerCiTP(C, null);
+		this.notify(tempTrigger);
 		return tempPerm;
 	}
 
@@ -139,6 +149,30 @@ public class Game {
 		} else {
 			this.resolveOne();
 		}
+	}
+	
+	public void addTrigger(Trigger T)
+	{
+		knownTriggers.add(T);
+	}
+	
+	public void notify(Trigger T)
+	{
+		Iterator<Trigger> itTriggers = knownTriggers.iterator();
+		Trigger tempTrigger;
+		while (itTriggers.hasNext())
+		{
+			tempTrigger = itTriggers.next();
+			if (tempTrigger.equals(T))
+			{
+				tempTrigger.addToStack();
+			}
+		}
+	}
+	
+	public void addAbilityToStack(EventPlaceholder E)
+	{
+		this.STK.addAbility(E);
 	}
 
 	public void play(String C, Player P) {
@@ -159,7 +193,7 @@ public class Game {
 				}
 			} else {
 				// It is a spell
-				// check is that spell can be played (enough mana in mana pool,
+				// check that the spell can be played (enough mana in mana pool,
 				// legal target, etc)
 				if (this.STK.isEmpty() || temp.hasFlash()) {
 					if (temp.canPlay()) {

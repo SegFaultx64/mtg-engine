@@ -1,11 +1,14 @@
 package Cards;
+import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import Zones.Zone;
 import Characteristics.Manacost;
 import Characteristics.Typeline;
+import Core.Game;
 import Core.Player;
+import Events.*;
 
 
 public class Card {
@@ -15,11 +18,33 @@ public class Card {
 	Typeline typTypes;
 	String strRulesText;
 	Player Owner;
+	boolean isAbility = false;
 	int intPower, intToughness, intLoyalty = 0;
+	ArrayList<Event> eveTriggeredAbilities;
 	
 	public void setOwner(Player O)
 	{
 		this.Owner = O;
+		eveTriggeredAbilities = new ArrayList<Event>();
+	}
+	
+	public Player getOwner()
+	{
+		return this.Owner;
+	}
+	
+	public String getName()
+	{
+		return this.strName;
+	}
+	
+	public void addTriggeredAbility(Trigger T, Event E)
+	{
+		Trigger tempTrigger = T;
+		Event tempEvent = E;
+		Game tempGame = Game.GetInstance();
+		T.setCard(this);
+		tempGame.addTrigger(tempTrigger);
 	}
 	
 	public Zone getZone() {
@@ -36,6 +61,13 @@ public class Card {
 		this.strName = name;
 		this.strRulesText = rules;
 		this.typTypes = new Typeline(types);
+		this.isAbility = this instanceof EventPlaceholder;
+	}
+	
+	public void init()
+	{
+		EventPlaceholder tempEvent = new EventPlaceholder(null,null,null,null,null,null);
+		this.isAbility = this.getClass().isInstance(tempEvent);
 	}
 	
 	public void getColor()
@@ -77,6 +109,11 @@ public class Card {
 		return this.typTypes.isPermanent();
 	}
 	
+	public boolean isAbility()
+	{
+		return this.isAbility;
+	}
+	
 	public boolean hasFlash()
 	{
 		return this.typTypes.isInstant();
@@ -89,6 +126,7 @@ public class Card {
 		Temp.intLoyalty = this.intLoyalty;
 		Temp.intPower = this.intPower;
 		Temp.intToughness = this.intToughness;
+		Temp.Owner = this.Owner;
 		return Temp;
 	}
 	
@@ -99,6 +137,7 @@ public class Card {
 		Temp.intLoyalty = this.intLoyalty;
 		Temp.intPower = this.intPower;
 		Temp.intToughness = this.intToughness;
+		Temp.Owner = this.Owner;
 		return Temp;
 	}
 	

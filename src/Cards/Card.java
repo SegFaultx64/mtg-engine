@@ -21,6 +21,13 @@ public class Card {
 	boolean isAbility = false;
 	int intPower, intToughness, intLoyalty = 0;
 	ArrayList<Event> eveTriggeredAbilities;
+	String imgURL = "";
+	
+	
+	public String getCardforSend()
+	{
+		return imgURL + "," + strName;
+	}
 	
 	public void setOwner(Player O)
 	{
@@ -61,6 +68,16 @@ public class Card {
 		this.strName = name;
 		this.strRulesText = rules;
 		this.typTypes = new Typeline(types);
+		this.isAbility = this instanceof EventPlaceholder;
+	}
+	
+	public Card(Manacost cost, String name, String rules, String types, String url)
+	{
+		this.mnaCost = cost;
+		this.strName = name;
+		this.strRulesText = rules;
+		this.typTypes = new Typeline(types);
+		this.imgURL = url;
 		this.isAbility = this instanceof EventPlaceholder;
 	}
 	

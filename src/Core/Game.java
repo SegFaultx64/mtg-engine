@@ -63,10 +63,10 @@ public class Game {
 		Card Test1, Test2, Test3;
 		Event tempEvent = new eventDrawCards(null, 1);
 		Trigger tempTrigger = new triggerCiTP(null, tempEvent);
-		Test1 = new Card(new Manacost("2"), "WallofOmens", "", "Creature");
+		Test1 = new Card(new Manacost("2"), "WallofOmens", "", "Creature","http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=193545&type=card");
 		Test1.addTriggeredAbility(tempTrigger, tempEvent);
 		Test2 = new Card(new Manacost("2"), "Bear", "", "Creature");
-		Test3 = new Card(null, "Land", "", "Land");
+		Test3 = new Card(null, "Land", "", "Land", "http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=227518&type=card");
 		this.KnownCards.add(Test1);
 		this.KnownCards.add(Test2);
 		this.KnownCards.add(Test3);
@@ -87,6 +87,10 @@ public class Game {
 	public Card findCard(Player P, Zone Z, String Name) {
 		Card temp = new Card(null, Name, "", "");
 		return (Z.getCard((Z.findCardIndex(temp))));
+	}
+	
+	public Card findCard(Zone Z, int Index) {
+		return (Z.getCard(Index));
 	}
 
 	public ArrayList<Permanent> getPermanentsControlledBy(Player P) {
@@ -255,4 +259,9 @@ public class Game {
 			io.writeOut("Colorless Floating: " + P.MP.getColorless());
 		}
 	}
+	
+	public void write(String S) {
+		io.writeOut(S);
+	}
+
 }

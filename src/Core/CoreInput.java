@@ -3,8 +3,11 @@ package Core;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.Charset;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import Cards.Card;
 
 public class CoreInput {
 	BufferedReader brIn;
@@ -93,8 +96,9 @@ public class CoreInput {
 	public void writeToNetwork(String S)
 	{
 		try {
-			this.clientOut.writeChars(S);
-			clientOut.writeBytes("\n");
+			String S2 = S + "\n";
+			byte[] temp = S2.getBytes("UTF-8");
+			this.clientOut.write(temp);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -167,6 +171,19 @@ public class CoreInput {
 		if (m.find())
 		{
 			curGame.end();
+		}
+		re1="GetCard\\([A-Z][a-z, A-Z]+,[0-9]+\\)";	// Any Single Character 2
+		p = Pattern.compile(re1);
+		m = p.matcher(curCommand);
+		if (m.find())
+		{
+			String strTemp = (String) curCommand.subSequence(8, curCommand.length() - 1);
+			String[] strsTemp = strTemp.split(",");
+			System.out.println(strsTemp[0]);
+			System.out.println(strsTemp[1]);
+			System.out.println(strTemp);
+			String temp = curGame.findCard(curGame.Players.get(0).HD,Integer.parseInt(strsTemp[1])).getCardforSend();
+			curGame.write(temp);
 		}
 	}
 }
